@@ -498,6 +498,7 @@ class ModelConfig(BaseConfig):
 class OptimizerType(StrEnum):
     lionw = "lionw"
     adamw = "adamw"
+    demo = "demo"
 
 
 @dataclass
@@ -531,6 +532,18 @@ class OptimizerConfig(BaseConfig):
     """
     Whether to record detailed metrics about the optimizer's parameter updates, like the norm and max
     of the update with AdamW.
+    """
+    ### DeMo parameters
+    compression_decay: float = 0.999
+
+    compression_topk: int = 32
+    """
+    How many numbers of topk to transmit per chunk, if dynamic is enabled, this is the initial topk
+    """
+
+    compression_chunk: int = 64
+    """
+    Size of the chunk of the gradients, note that 2D gradients are chunked in 2D, which the topk sparsity is squared compared to 1D
     """
 
     def __post_init__(self):
@@ -723,6 +736,12 @@ class DDPGradSyncMode(StrEnum):
     Can use this mode with both option of `find_unused_params` but specifically recommended to use with `find_unused_params`
     set to True, to prevent errors.
     """
+    
+    none = "none"
+    """
+    Totally disable gradient synchronization within the distributed model.
+    Should only be done with some explicit external synchronization (e.g. DeMo) or if you just like spinning your wheels
+    """
 
 
 @dataclass
@@ -818,6 +837,7 @@ class FSDPConfig(BaseConfig):
     PyTorch's default HSDP behavior matches this default behavior.
     """
 
+    disable_grad_sync: bool = False
 
 class CheckpointType(StrEnum):
     sharded = "sharded"
